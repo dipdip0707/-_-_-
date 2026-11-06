@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>채팅 말풍선 만들기</title>
+<style>
+:root{--bg:#fff;--fg:#111;--card:#f4f4f4;--line:#ddd;--me:#8ad0d3;--other:#f4f4f4;--panel:#fafafa;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1b1b1d;--fg:#eee;--card:#2a2a2d;--line:#3a3a3e;--other:#2e2e32;--panel:#222225}}
+:root[data-theme="dark"]{--bg:#1b1b1d;--fg:#eee;--card:#2a2a2d;--line:#3a3a3e;--other:#2e2e32;--panel:#222225}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:-apple-system,"Apple SD Gothic Neo","Noto Sans KR",sans-serif;display:flex;flex-wrap:wrap;gap:16px;padding:16px}
+.panel{flex:1 1 300px;max-width:420px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px}
+h2{font-size:15px;margin:0 0 10px}
+label{display:block;font-size:12px;margin:8px 0 3px;opacity:.7}
+input[type=text],textarea,select{width:100%;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);font:inherit}
+textarea{resize:vertical;min-height:50px}
+.row{display:flex;gap:6px;margin-top:8px}
+button{padding:8px 12px;border:0;border-radius:8px;background:var(--me);color:#fff;font:inherit;cursor:pointer}
+button.g{background:var(--card);color:var(--fg)}
+.item{display:flex;gap:6px;align-items:center;margin-top:6px;font-size:13px}
+.item span{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.item b{font-size:11px;padding:2px 6px;border-radius:6px;background:var(--card)}
+.preview{flex:1 1 360px;max-width:480px;background:#fff;color:#111;border:1px solid var(--line);border-radius:12px;padding:16px;min-height:300px}
+.msgs{display:flex;flex-direction:column;gap:6px}
+.o{display:flex;gap:10px;align-items:flex-start}
+.av{width:44px;height:44px;border-radius:50%;background:#fff center/cover no-repeat;flex:none}
+.name{font-size:13px;margin:0 0 4px}
+.col{display:flex;flex-direction:column;gap:6px;max-width:75%}
+.b{padding:12px 16px;border-radius:16px;font-size:16px;line-height:1.5;white-space:pre-wrap;word-break:keep-all;width:fit-content}
+.b.o1{background:var(--other-l,#f4f4f4);color:#111}
+.me{display:flex;justify-content:flex-end}
+.b.me1{background:var(--me);color:#fff;max-width:75%;display:flex;justify-content:center;align-items:center;text-align:center;padding:12px 22px;margin-right:10px}
+</style>
+</head>
+<body>
+<div class="panel">
+  <h2>설정</h2>
+  <label>상대 이름</label><input type="text" id="nm" value="리안 퀴니코스">
+  <label>상대 프로필 사진</label><input type="file" id="av" accept="image/*">
+  <label>말풍선 색 (나)</label><input type="color" id="mc" value="#8ad0d3">
+  <h2 style="margin-top:16px">대사 추가</h2>
+  <select id="who"><option value="o">상대</option><option value="m">나</option></select>
+  <label>내용</label><textarea id="tx" placeholder="대사 입력"></textarea>
+  <div class="row"><button id="add">추가</button><button class="g" id="clr">전체 삭제</button></div>
+  <div id="list"></div>
+</div>
+<div class="preview"><div class="msgs" id="out"></div></div>
+<script>
+var msgs=[
+ {w:'o',t:'주인공양의 세계에도 예쁜 꽃이 많이 피겠죠?'},
+ {w:'o',t:'나중에 같이 꽃구경 가시지 않을래요?'},
+ {w:'m',t:'저랑요? 왜요?'}
+];
+var avUrl='';
+var $=function(i){return document.getElementById(i)};
+function render(){
+  var out=$('out');out.innerHTML='';
+  var i=0;
+  while(i<msgs.length){
+    if(msgs[i].w==='o'){
+      var row=document.createElement('div');row.className='o';
+      var av=document.createElement('div');av.className='av';
+      if(avUrl)av.style.backgroundImage='url('+avUrl+')';
+      var col=document.createElement('div');col.className='col';
+      var n=document.createElement('div');n.className='name';n.textContent=$('nm').value;
+      col.appendChild(n);
+      while(i<msgs.length&&msgs[i].w==='o'){
+        var b=document.createElement('div');b.className='b o1';b.textContent=msgs[i].t;col.appendChild(b);i++;
+      }
+      row.appendChild(av);row.appendChild(col);out.appendChild(row);
+    }else{
+      var r=document.createElement('div');r.className='me';
+      var c=document.createElement('div');c.style.cssText='display:flex;flex-direction:column;align-items:flex-end;gap:6px;max-width:75%';
+      while(i<msgs.length&&msgs[i].w==='m'){
+        var m=document.createElement('div');m.className='b me1';m.style.background=$('mc').value;m.textContent=msgs[i].t;c.appendChild(m);i++;
+      }
+      r.appendChild(c);out.appendChild(r);
+    }
+  }
+  var l=$('list');l.innerHTML='';
+  msgs.forEach(function(m,idx){
+    var d=document.createElement('div');d.className='item';
+    d.innerHTML='<b>'+(m.w==='o'?'상대':'나')+'</b><span></span><button class="g">삭제</button>';
+    d.querySelector('span').textContent=m.t;
+    d.querySelector('button').onclick=function(){msgs.splice(idx,1);render()};
+    l.appendChild(d);
+  });
+}
+$('add').onclick=function(){var t=$('tx').value.trim();if(!t)return;msgs.push({w:$('who').value,t:t});$('tx').value='';render()};
+$('clr').onclick=function(){msgs=[];render()};
+$('nm').oninput=render;$('mc').oninput=render;
+$('av').onchange=function(e){var f=e.target.files[0];if(!f)return;var r=new FileReader();r.onload=function(){avUrl=r.result;render()};r.readAsDataURL(f)};
+render();
+</script>
+</body>
+</html>
